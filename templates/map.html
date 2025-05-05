@@ -1,0 +1,495 @@
+{% extends "base.html" %}
+
+{% block title %}空气质量地图 - 实时监测{% endblock %}
+
+{% block content %}
+<div class="dashboard-main">
+    <!-- 左侧选择面板 -->
+    <div class="data-panel">
+        <h2 class="panel-title">区域选择</h2>
+        <div class="select-container">
+            <select id="province-select" class="form-select mb-3">
+                <option value="">选择省份</option>
+                {% for province in provinces %}
+                <option value="{{ province }}">{{ province }}</option>
+                {% endfor %}
+            </select>
+            <select id="city-select" class="form-select" disabled>
+                <option value="">选择城市</option>
+            </select>
+        </div>
+        
+        <!-- 当前空气质量信息 -->
+        <div id="current-aqi" class="mt-4">
+            <h3 class="panel-title">当前空气质量预测</h3>
+            <div id="aqi-value" class="aqi-indicator">
+                -- AQI --
+            </div>
+            <div id="aqi-details" class="mt-3">
+                <table class="data-table">
+                    <tr>
+                        <th>PM2.5</th>
+                        <td id="pm25-value">--</td>
+                    </tr>
+                    <tr>
+                        <th>更新时间</th>
+                        <td id="update-time">--</td>
+                    </tr>
+                </table>
+            </div>
+            {% if current_user %}
+            <div class="mt-3">
+                <button id="favorite-btn" class="btn btn-outline-primary" style="display: none;">
+                    <i class="bi bi-star"></i> 收藏城市
+                </button>
+                <button id="unfavorite-btn" class="btn btn-primary" style="display: none;">
+                    <i class="bi bi-star-fill"></i> 已收藏
+                </button>
+            </div>
+            {% else %}
+            <div class="mt-3">
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-star"></i> 登录后收藏
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 右侧地图 -->
+    <div class="data-panel">
+        <h2 class="panel-title">空气质量地图</h2>
+        <div id="map-container"></div>
+        <!-- 图例 -->
+        <div class="mt-3">
+            <h4 class="panel-title">空气质量指数(AQI)图例</h4>
+            <div class="d-flex flex-wrap justify-content-between">
+                <div class="aqi-excellent p-2">优 (0-50)</div>
+                <div class="aqi-good p-2">良 (51-100)</div>
+                <div class="aqi-moderate p-2">轻度污染 (101-150)</div>
+                <div class="aqi-unhealthy p-2">中度污染 (151-200)</div>
+                <div class="aqi-very-unhealthy p-2">重度污染 (201-300)</div>
+                <div class="aqi-hazardous p-2">严重污染 (>300)</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block css %}
+<style>
+.dashboard-main {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 20px;
+    padding: 20px;
+    height: calc(100vh - 60px);
+    background: #1e272e;
+    color: #ecf0f1;
+}
+
+.data-panel {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.panel-title {
+    color: #ecf0f1;
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+}
+
+#map-container {
+    width: 100%;
+    height: calc(100% - 120px);
+    min-height: 400px;
+    border-radius: 4px;
+}
+
+.select-container {
+    margin-bottom: 20px;
+}
+
+.form-select {
+    width: 100%;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    color: #ecf0f1;
+    margin-bottom: 10px;
+}
+
+.form-select option {
+    background: #2d3436;
+    color: #ecf0f1;
+}
+
+.aqi-indicator {
+    font-size: 2rem;
+    font-weight: bold;
+    text-align: center;
+    padding: 15px;
+    border-radius: 4px;
+    margin: 10px 0;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+    padding: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ecf0f1;
+}
+
+.data-table th {
+    text-align: left;
+    color: #bdc3c7;
+    font-weight: normal;
+    width: 40%;
+}
+
+.aqi-excellent {
+    background-color: rgba(0, 228, 0, 0.3);
+}
+
+.aqi-good {
+    background-color: rgba(255, 255, 0, 0.3);
+}
+
+.aqi-moderate {
+    background-color: rgba(255, 126, 0, 0.3);
+}
+
+.aqi-unhealthy {
+    background-color: rgba(255, 0, 0, 0.3);
+}
+
+.aqi-very-unhealthy {
+    background-color: rgba(153, 0, 76, 0.3);
+}
+
+.aqi-hazardous {
+    background-color: rgba(126, 0, 35, 0.3);
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-primary {
+    color: #00a8ff;
+    border: 1px solid #00a8ff;
+    background: transparent;
+}
+
+.btn-outline-primary:hover {
+    color: #ecf0f1;
+    background-color: #00a8ff;
+}
+
+.btn-primary {
+    color: #ecf0f1;
+    background-color: #00a8ff;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #0097e6;
+}
+
+/* 图例样式 */
+.mt-3 {
+    margin-top: 1rem;
+}
+
+.d-flex {
+    display: flex;
+}
+
+.flex-wrap {
+    flex-wrap: wrap;
+}
+
+.justify-content-between {
+    justify-content: space-between;
+}
+
+.p-2 {
+    padding: 0.5rem;
+}
+</style>
+{% endblock %}
+
+{% block js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 等待高德地图 API 加载完成
+    window.onAMapLoaded = function() {
+        // 初始化地图
+        var map = new AMap.Map('map-container', {
+            zoom: 4,
+            center: [104.195397, 35.86166],
+            mapStyle: 'amap://styles/normal',
+            viewMode: '2D',
+            resizeEnable: true
+        });
+
+        // 添加地图控件
+        map.addControl(new AMap.Scale());
+        map.addControl(new AMap.ToolBar({
+            position: 'RB'
+        }));
+
+        var currentMarker = null;
+        var currentInfoWindow = null;
+        var currentCity = null;
+    
+        // 获取城市列表
+        function getCities(province) {
+            const citySelect = document.getElementById('city-select');
+            citySelect.innerHTML = '<option value="">选择城市</option>';
+            citySelect.disabled = true;
+
+            if (!province) {
+                return;
+            }
+
+            console.log('正在获取城市列表，省份:', province);
+            fetch(`/api/get_cities?province=${encodeURIComponent(province)}`)
+                .then(response => {
+                    console.log('服务器响应:', response.status);
+                    return response.json();
+                })
+                .then(cities => {
+                    console.log('获取到的城市列表:', cities);
+                    if (Array.isArray(cities)) {
+                        cities.forEach(city => {
+                            const option = document.createElement('option');
+                            option.value = city;
+                            option.textContent = city;
+                            citySelect.appendChild(option);
+                        });
+                        citySelect.disabled = false;
+                        console.log('城市列表已更新');
+                    } else {
+                        console.error('返回的城市数据格式不正确:', cities);
+                    }
+                })
+                .catch(error => {
+                    console.error('获取城市列表失败:', error);
+                    alert('获取城市列表失败，请刷新页面重试');
+                });
+        }
+
+        // 获取空气质量数据
+        function getAirQuality(city) {
+            if (!city) {
+                return;
+            }
+
+            currentCity = city;
+
+            fetch(`/api/get_prediction?city=${encodeURIComponent(city)}`)
+                .then(response => response.json())
+                .then(data => {
+                    // 更新空气质量信息
+                    document.getElementById('aqi-value').textContent = `AQI: ${data.current.aqi}`;
+                    document.getElementById('aqi-value').className = `aqi-indicator ${getAQIClass(data.current.aqi)}`;
+                    document.getElementById('pm25-value').textContent = data.current.pm25;
+                    document.getElementById('update-time').textContent = data.current.timestamp;
+
+                    // 更新地图标记
+                    if (currentMarker) {
+                        currentMarker.setMap(null);
+                    }
+                    if (currentInfoWindow) {
+                        currentInfoWindow.close();
+                    }
+
+                    // 创建新标记
+                    currentMarker = new AMap.Marker({
+                        position: new AMap.LngLat(data.lng, data.lat),
+                        title: city,
+                        animation: 'AMAP_ANIMATION_DROP'
+                    });
+                    currentMarker.setMap(map);
+
+                    // 创建信息窗口
+                    currentInfoWindow = new AMap.InfoWindow({
+                        content: `
+                            <div style="padding: 10px; color: #333;">
+                                <h4 style="margin: 0 0 10px 0; color: #333; font-size: 16px;">${city}</h4>
+                                <div style="margin: 5px 0;">
+                                    <span style="font-weight: bold;">AQI:</span>
+                                    <span style="color: ${getAQIColor(data.current.aqi)};">${data.current.aqi}</span>
+                                </div>
+                                <div style="margin: 5px 0;">
+                                    <span style="font-weight: bold;">PM2.5:</span>
+                                    <span>${data.current.pm25}</span>
+                                </div>
+                                <div style="margin: 5px 0;">
+                                    <span style="font-weight: bold;">空气质量:</span>
+                                    <span style="color: ${getAQIColor(data.current.aqi)};">${data.current.quality_level}</span>
+                                </div>
+                            </div>
+                        `,
+                        offset: new AMap.Pixel(0, -30)
+                    });
+                    currentInfoWindow.open(map, currentMarker.getPosition());
+
+                    // 调整地图视角
+                    map.setZoomAndCenter(10, [data.lng, data.lat]);
+
+                    // 更新收藏按钮状态
+                    const favoriteBtn = document.getElementById('favorite-btn');
+                    const unfavoriteBtn = document.getElementById('unfavorite-btn');
+                    if (favoriteBtn && unfavoriteBtn) {
+                        if (data.is_favorite) {
+                            favoriteBtn.style.display = 'none';
+                            unfavoriteBtn.style.display = 'inline-flex';
+                        } else {
+                            favoriteBtn.style.display = 'inline-flex';
+                            unfavoriteBtn.style.display = 'none';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('获取空气质量数据失败:', error);
+                    alert('获取空气质量数据失败，请重试');
+                });
+        }
+
+        // 根据AQI值获取对应的CSS类名
+        function getAQIClass(aqi) {
+            if (aqi <= 50) return 'aqi-excellent';
+            if (aqi <= 100) return 'aqi-good';
+            if (aqi <= 150) return 'aqi-moderate';
+            if (aqi <= 200) return 'aqi-unhealthy';
+            if (aqi <= 300) return 'aqi-very-unhealthy';
+            return 'aqi-hazardous';
+        }
+
+        // 根据AQI值获取对应的颜色
+        function getAQIColor(aqi) {
+            if (aqi <= 50) return '#00e400';
+            if (aqi <= 100) return '#ff7e00';
+            if (aqi <= 150) return '#ff7e00';
+            if (aqi <= 200) return '#ff0000';
+            if (aqi <= 300) return '#99004c';
+            return '#7e0023';
+        }
+
+        // 绑定事件监听器
+        document.getElementById('province-select').addEventListener('change', function(e) {
+            console.log('选择省份:', e.target.value);
+            getCities(e.target.value);
+        });
+
+        document.getElementById('city-select').addEventListener('change', function(e) {
+            getAirQuality(e.target.value);
+        });
+
+        // 收藏按钮点击事件
+        const favoriteBtn = document.getElementById('favorite-btn');
+        if (favoriteBtn) {
+            favoriteBtn.addEventListener('click', function() {
+                if (!currentCity) return;
+
+                addFavorite(currentCity);
+            });
+        }
+
+        // 取消收藏按钮点击事件
+        const unfavoriteBtn = document.getElementById('unfavorite-btn');
+        if (unfavoriteBtn) {
+            unfavoriteBtn.addEventListener('click', function() {
+                if (!currentCity) return;
+
+                removeFavorite(currentCity);
+            });
+        }
+    };
+
+    // 检查高德地图 API 是否已加载
+    if (typeof AMap !== 'undefined') {
+        window.onAMapLoaded();
+    } else {
+        // 如果 API 未加载，等待加载完成
+        window.initAMap = function() {
+            window.onAMapLoaded();
+        };
+    }
+
+    // 添加收藏
+    function addFavorite(city) {
+        fetch(`/user/add_favorite/${city}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // 更新收藏按钮状态
+                document.getElementById('favorite-btn').style.display = 'none';
+                document.getElementById('unfavorite-btn').style.display = 'inline-flex';
+                document.getElementById('unfavorite-btn').innerHTML = '<i class="bi bi-star-fill"></i> 已收藏';
+                document.getElementById('unfavorite-btn').onclick = () => removeFavorite(city);
+                showToast('success', data.message);
+            } else {
+                showToast('error', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('error', '操作失败，请重试');
+        });
+    }
+
+    // 取消收藏
+    function removeFavorite(city) {
+        fetch(`/user/remove_favorite/${city}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // 更新收藏按钮状态
+                document.getElementById('favorite-btn').style.display = 'inline-flex';
+                document.getElementById('unfavorite-btn').style.display = 'none';
+                document.getElementById('favorite-btn').innerHTML = '<i class="bi bi-star"></i> 收藏城市';
+                document.getElementById('favorite-btn').onclick = () => addFavorite(city);
+                showToast('success', data.message);
+            } else {
+                showToast('error', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('error', '操作失败，请重试');
+        });
+    }
+});
+</script>
+{% endblock %} 

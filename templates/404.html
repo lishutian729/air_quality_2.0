@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}404 - 页面未找到{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-6 mx-auto text-center">
+            <div class="error-template">
+                <h1 class="display-1">
+                    <i class="fas fa-exclamation-circle text-danger"></i>
+                </h1>
+                <h2 class="display-4">404</h2>
+                <h3 class="mb-4">抱歉，页面未找到</h3>
+                <div class="error-details mb-4">
+                    您访问的页面可能已被移除、名称已更改或暂时不可用。
+                </div>
+                <div class="error-actions">
+                    <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-home me-2"></i>返回首页
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.error-template {
+    padding: 40px 15px;
+}
+.error-template i.fa-exclamation-circle {
+    font-size: 5rem;
+    margin-bottom: 2rem;
+}
+.error-details {
+    color: #666;
+}
+.error-actions {
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+</style>
+{% endblock %} 

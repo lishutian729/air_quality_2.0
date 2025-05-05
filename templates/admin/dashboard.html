@@ -1,0 +1,293 @@
+{% extends "admin/base.html" %}
+
+{% block title %}仪表盘 - 管理后台{% endblock %}
+
+{% block css %}
+<style>
+.admin-container {
+    display: flex;
+    min-height: calc(100vh - 60px);
+    background: #1e272e;
+}
+
+.admin-sidebar {
+    width: 250px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 20px 0;
+    backdrop-filter: blur(10px);
+}
+
+.admin-content {
+    flex: 1;
+    padding: 20px;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-menu li {
+    margin-bottom: 5px;
+}
+
+.sidebar-menu a {
+    display: block;
+    padding: 12px 20px;
+    color: #ecf0f1;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.sidebar-menu a:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-menu a.active {
+    background: #00a8ff;
+    color: white;
+}
+
+.sidebar-menu i {
+    margin-right: 10px;
+    width: 20px;
+    text-align: center;
+}
+
+.admin-header {
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-header h2 {
+    color: #ecf0f1;
+    margin: 0;
+    font-size: 24px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 20px;
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
+}
+
+.stat-card h3 {
+    color: #ecf0f1;
+    margin: 0 0 10px 0;
+    font-size: 16px;
+}
+
+.stat-card .value {
+    color: #00a8ff;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.recent-activity {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 20px;
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
+}
+
+.recent-activity h3 {
+    color: #ecf0f1;
+    margin: 0 0 20px 0;
+    font-size: 18px;
+}
+
+.activity-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.activity-item {
+    padding: 15px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-item .time {
+    color: #bdc3c7;
+    font-size: 12px;
+}
+
+.activity-item .description {
+    color: #ecf0f1;
+    margin: 5px 0;
+}
+
+.activity-item .user {
+    color: #00a8ff;
+}
+
+.card-body {
+    color: #000;
+}
+
+.text-muted {
+    color: #666 !important;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h3">仪表盘</h2>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">用户总数</h6>
+                            <h2 class="mt-2 mb-0">{{ stats.user_count }}</h2>
+                        </div>
+                        <div class="fs-1">
+                            <i class="bi bi-people"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">今日登录</h6>
+                            <h2 class="mt-2 mb-0">{{ stats.today_login }}</h2>
+                        </div>
+                        <div class="fs-1">
+                            <i class="bi bi-box-arrow-in-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">今日注册</h6>
+                            <h2 class="mt-2 mb-0">{{ stats.today_register }}</h2>
+                        </div>
+                        <div class="fs-1">
+                            <i class="bi bi-person-plus"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">总访问量</h6>
+                            <h2 class="mt-2 mb-0">{{ stats.total_visits }}</h2>
+                        </div>
+                        <div class="fs-1">
+                            <i class="bi bi-graph-up"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- 系统信息 -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">系统信息</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="bi bi-cpu me-2 text-primary"></i>
+                            <strong class="text-dark">Python版本：</strong>{{ python_version }}
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-pc-display me-2 text-primary"></i>
+                            <strong class="text-dark">操作系统：</strong>{{ os_info }}
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-database me-2 text-primary"></i>
+                            <strong class="text-dark">数据库版本：</strong>{{ db_version }}
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-clock me-2 text-primary"></i>
+                            <strong class="text-dark">当前时间：</strong>{{ current_time }}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 最近活动 -->
+        <div class="col-md-8">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">最近活动</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>管理员</th>
+                                    <th>模块</th>
+                                    <th>操作</th>
+                                    <th>描述</th>
+                                    <th>时间</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in recent_logs %}
+                                <tr>
+                                    <td>{{ log.user.username if log.user else '未知用户' }}</td>
+                                    <td>{{ log.module }}</td>
+                                    <td>{{ log.action }}</td>
+                                    <td>{{ log.description }}</td>
+                                    <td>{{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    // 自动刷新页面数据
+    setInterval(function() {
+        location.reload();
+    }, 300000); // 每5分钟刷新一次
+</script>
+{% endblock %} 

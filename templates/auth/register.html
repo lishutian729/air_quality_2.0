@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block title %}注册 - 空气质量预测系统{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-box">
+        <h2>用户注册</h2>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form method="POST" action="{{ url_for('auth.register') }}">
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input type="text" class="form-control" id="username" name="username" required>
+                <div class="form-text">用户名长度为3-20个字符，只能包含字母、数字和下划线。</div>
+            </div>
+            <div class="form-group">
+                <label for="email">电子邮箱</label>
+                <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+                <div class="form-text">密码长度至少为6个字符，需包含字母和数字。</div>
+            </div>
+            <div class="form-group">
+                <label for="confirm_password">确认密码</label>
+                <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">注册</button>
+            </div>
+            <div class="text-center">
+                <p>已有账号？ <a href="{{ url_for('auth.login') }}">立即登录</a></p>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block css %}
+<style>
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 60px);
+    background: #1e272e;
+}
+
+.auth-box {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    width: 100%;
+    max-width: 400px;
+}
+
+.auth-box h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #ecf0f1;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #ecf0f1;
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    font-size: 16px;
+    color: #ecf0f1;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #00a8ff;
+    box-shadow: 0 0 0 2px rgba(0, 168, 255, 0.2);
+}
+
+.form-text {
+    font-size: 12px;
+    color: #bdc3c7;
+    margin-top: 5px;
+}
+
+.btn-primary {
+    background: #00a8ff;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: #0097e6;
+}
+
+.alert {
+    padding: 12px 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.alert-error, .alert-danger {
+    background-color: rgba(255, 0, 0, 0.1);
+    color: #ff6b6b;
+    border: 1px solid rgba(255, 0, 0, 0.2);
+}
+
+.alert-success {
+    background-color: rgba(0, 228, 0, 0.1);
+    color: #00e400;
+    border: 1px solid rgba(0, 228, 0, 0.2);
+}
+
+.alert-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+    border: 1px solid rgba(255, 193, 7, 0.2);
+}
+
+.text-center a {
+    color: #00a8ff;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.text-center a:hover {
+    color: #0097e6;
+    text-decoration: underline;
+}
+
+.text-center {
+    color: #ecf0f1;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const password = document.getElementById('password');
+    const confirmPassword = document.getElementById('confirm_password');
+    const username = document.getElementById('username');
+    
+    function showError(message) {
+        // 创建错误提示元素
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-danger';
+        alertDiv.textContent = message;
+        
+        // 移除之前的错误提示
+        const existingAlerts = form.querySelectorAll('.alert');
+        existingAlerts.forEach(alert => alert.remove());
+        
+        // 插入新的错误提示
+        form.insertBefore(alertDiv, form.firstChild);
+    }
+    
+    form.addEventListener('submit', function(e) {
+        // 验证用户名
+        const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+        if (!usernameRegex.test(username.value)) {
+            e.preventDefault();
+            showError('用户名格式不正确，请使用3-20个字符，只能包含字母、数字和下划线');
+            return;
+        }
+        
+        // 验证密码
+        if (password.value.length < 6) {
+            e.preventDefault();
+            showError('密码长度至少6位');
+            return;
+        }
+        
+        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{6,}$/;
+        if (!passwordRegex.test(password.value)) {
+            e.preventDefault();
+            showError('密码必须包含至少一个字母和一个数字');
+            return;
+        }
+        
+        // 验证密码确认
+        if (password.value !== confirmPassword.value) {
+            e.preventDefault();
+            showError('两次输入的密码不一致');
+            return;
+        }
+    });
+});
+</script>
+{% endblock %} 

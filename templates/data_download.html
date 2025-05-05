@@ -1,0 +1,456 @@
+{% extends "base.html" %}
+
+{% block title %}历史数据下载 - 空气质量监测系统{% endblock %}
+
+{% block css %}
+<style>
+.dashboard-main {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 20px;
+    padding: 20px;
+    min-height: calc(100vh - 60px);
+    background: #1e272e;
+    color: #ecf0f1;
+    overflow-y: auto;
+}
+
+.data-panel {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    height: fit-content;
+}
+
+.panel-title {
+    color: #ecf0f1;
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+}
+
+.form-select {
+    width: 100%;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    color: #ecf0f1;
+    margin-bottom: 10px;
+}
+
+.form-select option {
+    background: #2d3436;
+    color: #ecf0f1;
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    color: #ecf0f1;
+    margin-bottom: 10px;
+}
+
+.btn-primary {
+    background: #00a8ff;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.btn-primary:hover {
+    background: #0097e6;
+}
+
+.btn-primary:disabled {
+    background: rgba(255, 255, 255, 0.1);
+    cursor: not-allowed;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 5px;
+    color: #bdc3c7;
+}
+
+.table-responsive {
+    max-height: 400px;
+    overflow-y: auto;
+    background: inherit;
+    border-radius: 4px;
+}
+
+.table-responsive table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table-responsive thead {
+    position: sticky;
+    top: 0;
+    background: rgba(0, 0, 0, 0.2);
+    z-index: 1;
+}
+
+.table-responsive th {
+    padding: 12px 8px;
+    text-align: left;
+    font-weight: 500;
+    color: #ecf0f1;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    white-space: nowrap;
+}
+
+.table-responsive td {
+    padding: 10px 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.table-responsive tbody tr:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.alert {
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+.alert-success {
+    background: rgba(76, 209, 55, 0.2);
+    border: 1px solid rgba(76, 209, 55, 0.5);
+    color: #4cd137;
+}
+
+.alert-danger {
+    background: rgba(235, 77, 75, 0.2);
+    border: 1px solid rgba(235, 77, 75, 0.5);
+    color: #eb4d4b;
+}
+
+.alert-info {
+    background: rgba(0, 168, 255, 0.2);
+    border: 1px solid rgba(0, 168, 255, 0.5);
+    color: #00a8ff;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-main">
+    <!-- 左侧控制面板 -->
+    <div class="data-panel">
+        <h2 class="panel-title">数据下载条件</h2>
+        <div class="form-group">
+            <label class="form-label" for="province-select">省份</label>
+            <select id="province-select" class="form-select">
+                <option value="">选择省份</option>
+                {% for province in provinces %}
+                <option value="{{ province }}">{{ province }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label" for="city-select">城市</label>
+            <select id="city-select" class="form-select" disabled>
+                <option value="">选择城市</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="start-date">开始日期</label>
+            <input type="date" id="start-date" class="form-control" />
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label" for="end-date">结束日期</label>
+            <input type="date" id="end-date" class="form-control" />
+        </div>
+        
+        <div class="form-group">
+            <button id="download-btn" class="btn-primary" disabled>下载数据</button>
+        </div>
+        
+        <div id="download-alert" class="alert" style="display: none;"></div>
+    </div>
+
+    <!-- 右侧数据预览 -->
+    <div class="data-panel">
+        <h2 class="panel-title">数据预览</h2>
+        <div class="alert alert-info">
+            选择省份、城市和日期范围后，可以下载历史空气质量数据。数据将以CSV格式导出，可以用Excel或其他数据分析工具打开。
+        </div>
+        
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>日期</th>
+                        <th>小时</th>
+                        <th>城市</th>
+                        <th>AQI</th>
+                        <th>PM2.5</th>
+                        <th>空气质量等级</th>
+                    </tr>
+                </thead>
+                <tbody id="data-preview">
+                    <tr>
+                        <td colspan="6" style="text-align: center;">暂无数据</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const provinceSelect = document.getElementById('province-select');
+    const citySelect = document.getElementById('city-select');
+    const startDateInput = document.getElementById('start-date');
+    const endDateInput = document.getElementById('end-date');
+    const downloadBtn = document.getElementById('download-btn');
+    const downloadAlert = document.getElementById('download-alert');
+    const dataPreview = document.getElementById('data-preview');
+    
+    // 设置日期默认值
+    const today = new Date();
+    const lastMonth = new Date();
+    lastMonth.setMonth(today.getMonth() - 1);
+    
+    startDateInput.valueAsDate = lastMonth;
+    endDateInput.valueAsDate = today;
+    
+    // 获取城市列表
+    function getCities(province) {
+        citySelect.innerHTML = '<option value="">选择城市</option>';
+        citySelect.disabled = true;
+        downloadBtn.disabled = true;
+
+        if (!province) {
+            return;
+        }
+
+        fetch(`/api/get_cities?province=${encodeURIComponent(province)}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('网络请求失败');
+                }
+                return response.json();
+            })
+            .then(cities => {
+                if (Array.isArray(cities)) {
+                    cities.forEach(city => {
+                        const option = document.createElement('option');
+                        option.value = city;
+                        option.textContent = city;
+                        citySelect.appendChild(option);
+                    });
+                    citySelect.disabled = false;
+                } else {
+                    console.error('返回的城市数据格式不正确:', cities);
+                }
+            })
+            .catch(error => {
+                console.error('获取城市列表失败:', error);
+                showAlert('error', '获取城市列表失败，请稍后重试');
+            });
+    }
+    
+    // 获取数据预览
+    function getDataPreview() {
+        const city = citySelect.value;
+        const startDate = startDateInput.value;
+        const endDate = endDateInput.value;
+        
+        if (!city || !startDate || !endDate) {
+            return;
+        }
+        
+        // 显示加载中
+        dataPreview.innerHTML = '<tr><td colspan="6" style="text-align: center;">加载中...</td></tr>';
+        
+        // 这里可以添加获取预览数据的API调用
+        // 由于这个项目没有实现预览API，所以下面仅展示模拟数据
+        
+        // 模拟API延迟
+        setTimeout(() => {
+            const sampleData = generateSampleData(city, startDate, endDate);
+            displayPreviewData(sampleData);
+            
+            // 启用下载按钮
+            downloadBtn.disabled = false;
+        }, 500);
+    }
+    
+    // 生成样本数据
+    function generateSampleData(city, startDate, endDate) {
+        const data = [];
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        
+        // 只显示5条样本数据
+        for (let i = 0; i < 5; i++) {
+            const date = new Date(start);
+            date.setDate(start.getDate() + Math.floor(Math.random() * ((end - start) / (1000 * 60 * 60 * 24))));
+            
+            const hour = Math.floor(Math.random() * 24);
+            const aqi = Math.floor(Math.random() * 300) + 20;
+            const pm25 = Math.floor(Math.random() * 150) + 10;
+            let quality = '';
+            
+            if (aqi <= 50) quality = '优';
+            else if (aqi <= 100) quality = '良';
+            else if (aqi <= 150) quality = '轻度污染';
+            else if (aqi <= 200) quality = '中度污染';
+            else if (aqi <= 300) quality = '重度污染';
+            else quality = '严重污染';
+            
+            data.push({
+                date: date.toISOString().split('T')[0],
+                hour: hour,
+                city: city,
+                aqi: aqi,
+                pm25: pm25,
+                quality: quality
+            });
+        }
+        
+        return data;
+    }
+    
+    // 显示预览数据
+    function displayPreviewData(data) {
+        dataPreview.innerHTML = '';
+        
+        if (data.length === 0) {
+            dataPreview.innerHTML = '<tr><td colspan="6" style="text-align: center;">暂无数据</td></tr>';
+            return;
+        }
+        
+        data.forEach(item => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${item.date}</td>
+                <td>${item.hour}:00</td>
+                <td>${item.city}</td>
+                <td>${item.aqi}</td>
+                <td>${item.pm25}</td>
+                <td>${item.quality}</td>
+            `;
+            dataPreview.appendChild(row);
+        });
+        
+        // 添加提示行
+        const noteRow = document.createElement('tr');
+        noteRow.innerHTML = `
+            <td colspan="6" style="text-align: center; color: #bdc3c7; font-style: italic;">
+                注: 仅显示部分数据，下载后可查看完整数据
+            </td>
+        `;
+        dataPreview.appendChild(noteRow);
+    }
+    
+    // 下载数据
+    function downloadData() {
+        const city = citySelect.value;
+        const startDate = startDateInput.value;
+        const endDate = endDateInput.value;
+        
+        if (!city) {
+            showAlert('error', '请选择城市');
+            return;
+        }
+        
+        if (!startDate || !endDate) {
+            showAlert('error', '请选择日期范围');
+            return;
+        }
+        
+        // 显示正在处理的提示
+        showAlert('info', '正在处理您的请求，请稍候...');
+        
+        // 使用直接的应用路径，绕过蓝图路由
+        const downloadUrl = `/app-download/history?city=${encodeURIComponent(city)}&start_date=${startDate}&end_date=${endDate}`;
+        
+        try {
+            // 创建下载链接
+            const downloadLink = document.createElement('a');
+            downloadLink.href = downloadUrl;
+            downloadLink.style.display = 'none';
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+            
+            showAlert('success', '数据下载已开始，请稍候...');
+        } catch (error) {
+            console.error('下载失败:', error);
+            showAlert('error', '下载失败，请稍后重试');
+        }
+    }
+    
+    // 显示提示信息
+    function showAlert(type, message) {
+        downloadAlert.className = 'alert';
+        downloadAlert.classList.add(type === 'error' ? 'alert-danger' : 'alert-success');
+        downloadAlert.textContent = message;
+        downloadAlert.style.display = 'block';
+        
+        setTimeout(() => {
+            downloadAlert.style.display = 'none';
+        }, 5000);
+    }
+    
+    // 事件监听器
+    provinceSelect.addEventListener('change', function() {
+        getCities(this.value);
+    });
+    
+    citySelect.addEventListener('change', function() {
+        if (this.value) {
+            getDataPreview();
+        } else {
+            dataPreview.innerHTML = '<tr><td colspan="6" style="text-align: center;">暂无数据</td></tr>';
+            downloadBtn.disabled = true;
+        }
+    });
+    
+    startDateInput.addEventListener('change', function() {
+        if (citySelect.value) {
+            getDataPreview();
+        }
+    });
+    
+    endDateInput.addEventListener('change', function() {
+        if (citySelect.value) {
+            getDataPreview();
+        }
+    });
+    
+    downloadBtn.addEventListener('click', function() {
+        downloadData();
+    });
+    
+    // 初始化加载
+    if (provinceSelect.value) {
+        getCities(provinceSelect.value);
+    }
+});
+</script>
+{% endblock %} 

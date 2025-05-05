@@ -1,0 +1,61 @@
+{% extends "admin/base.html" %}
+
+{% block title %}权限管理 - 管理后台{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h3">权限管理</h2>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>权限名称</th>
+                            <th>模块</th>
+                            <th>描述</th>
+                            <th>创建时间</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for permission in permissions %}
+                        <tr>
+                            <td>{{ permission.id }}</td>
+                            <td>{{ permission.name }}</td>
+                            <td>{{ permission.module }}</td>
+                            <td>{{ permission.description }}</td>
+                            <td>{{ permission.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 分页 -->
+    {% if permissions.pages > 1 %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% for page in permissions.iter_pages() %}
+                {% if page %}
+                    {% set args = request.args.copy() %}
+                    {% set _ = args.pop('page', None) %}
+                    <li class="page-item {% if page == permissions.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.permission_list', page=page, **args) }}">{{ page }}</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %} 

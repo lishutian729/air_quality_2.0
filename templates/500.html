@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}500 - 服务器错误{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-6 mx-auto text-center">
+            <div class="error-template">
+                <h1 class="display-1">
+                    <i class="fas fa-cog text-danger fa-spin"></i>
+                </h1>
+                <h2 class="display-4">500</h2>
+                <h3 class="mb-4">抱歉，服务器出现错误</h3>
+                <div class="error-details mb-4">
+                    服务器在处理您的请求时遇到了问题。我们已记录此错误，并将尽快修复。
+                </div>
+                <div class="error-actions">
+                    <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg me-3">
+                        <i class="fas fa-home me-2"></i>返回首页
+                    </a>
+                    <button onclick="window.location.reload()" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-sync-alt me-2"></i>重试
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.error-template {
+    padding: 40px 15px;
+}
+.error-template i.fa-cog {
+    font-size: 5rem;
+    margin-bottom: 2rem;
+}
+.error-details {
+    color: #666;
+}
+.error-actions {
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+</style>
+{% endblock %} 

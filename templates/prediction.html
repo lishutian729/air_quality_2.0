@@ -1,0 +1,764 @@
+{% extends "base.html" %}
+
+{% block title %}空气质量预测 - 24小时预测{% endblock %}
+
+{% block css %}
+<style>
+.dashboard-main {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 20px;
+    padding: 20px;
+    min-height: calc(100vh - 60px);
+    background: #1e272e;
+    color: #ecf0f1;
+    overflow-y: auto;
+}
+
+.data-panel {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    height: fit-content;
+}
+
+.panel-title {
+    color: #ecf0f1;
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+}
+
+.chart-container {
+    width: 100%;
+    height: 400px;
+    margin-bottom: 20px;
+}
+
+.select-container {
+    margin-bottom: 20px;
+}
+
+.form-select {
+    width: 100%;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    color: #ecf0f1;
+    margin-bottom: 10px;
+}
+
+.form-select option {
+    background: #2d3436;
+    color: #ecf0f1;
+}
+
+.aqi-indicator {
+    font-size: 2rem;
+    font-weight: bold;
+    text-align: center;
+    padding: 15px;
+    border-radius: 4px;
+    margin: 10px 0;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+    padding: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ecf0f1;
+}
+
+.data-table th {
+    text-align: left;
+    color: #bdc3c7;
+    font-weight: normal;
+    width: 40%;
+}
+
+.aqi-excellent {
+    background-color: rgba(0, 228, 0, 0.3);
+}
+
+.aqi-good {
+    background-color: rgba(255, 255, 0, 0.3);
+}
+
+.aqi-moderate {
+    background-color: rgba(255, 126, 0, 0.3);
+}
+
+.aqi-unhealthy {
+    background-color: rgba(255, 0, 0, 0.3);
+}
+
+.aqi-very-unhealthy {
+    background-color: rgba(153, 0, 76, 0.3);
+}
+
+.aqi-hazardous {
+    background-color: rgba(126, 0, 35, 0.3);
+}
+
+.btn-primary {
+    background: #00a8ff;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: #0097e6;
+}
+
+.btn-primary:disabled {
+    background: rgba(255, 255, 255, 0.1);
+    cursor: not-allowed;
+}
+
+.table-responsive {
+    max-height: 400px;
+    overflow-y: auto;
+    background: inherit;
+    border-radius: 4px;
+}
+
+.table-responsive table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table-responsive thead {
+    position: sticky;
+    top: 0;
+    background: rgba(0, 0, 0, 0.2);
+    z-index: 1;
+}
+
+.table-responsive th {
+    padding: 12px 8px;
+    text-align: left;
+    font-weight: 500;
+    color: #ecf0f1;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    white-space: nowrap;
+}
+
+.table-responsive td {
+    padding: 10px 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.table-responsive tbody tr:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.quality-level {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+    display: inline-block;
+    min-width: 80px;
+    text-align: center;
+}
+
+.quality-excellent {
+    background: rgba(0, 228, 0, 0.3);
+    color: #00e400;
+}
+
+.quality-good {
+    background: rgba(255, 255, 0, 0.3);
+    color: #ffff00;
+}
+
+.quality-moderate {
+    background: rgba(255, 126, 0, 0.3);
+    color: #ff7e00;
+}
+
+.quality-unhealthy {
+    background: rgba(255, 0, 0, 0.3);
+    color: #ff0000;
+}
+
+.quality-very-unhealthy {
+    background: rgba(153, 0, 76, 0.3);
+    color: #ff66b2;
+}
+
+.quality-hazardous {
+    background: rgba(126, 0, 35, 0.3);
+    color: #ff3366;
+}
+
+.alert-btn {
+    width: 100%;
+    margin-top: 15px;
+    text-align: center;
+}
+
+.alert-message {
+    padding: 10px;
+    border-radius: 4px;
+    margin-top: 15px;
+    display: none;
+}
+
+.alert-success {
+    background: rgba(76, 209, 55, 0.2);
+    border: 1px solid rgba(76, 209, 55, 0.5);
+    color: #4cd137;
+}
+
+.alert-danger {
+    background: rgba(235, 77, 75, 0.2);
+    border: 1px solid rgba(235, 77, 75, 0.5);
+    color: #eb4d4b;
+}
+
+.alert-warning {
+    background: rgba(241, 196, 15, 0.2);
+    border: 1px solid rgba(241, 196, 15, 0.5);
+    color: #f1c40f;
+}
+
+.download-btn {
+    margin-top: 15px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-main">
+    <!-- 左侧控制面板 -->
+    <div class="data-panel">
+        <h2 class="panel-title">区域选择</h2>
+        <div class="select-container">
+            <select id="province-select" class="form-select mb-3">
+                <option value="">选择省份</option>
+                {% for province in provinces %}
+                <option value="{{ province }}">{{ province }}</option>
+                {% endfor %}
+            </select>
+            <select id="city-select" class="form-select" disabled>
+                <option value="">选择城市</option>
+            </select>
+        </div>
+
+        <!-- 当前空气质量 -->
+        <div id="current-aqi" class="mt-4">
+            <h3 class="panel-title">当前空气质量预测</h3>
+            <div id="aqi-value" class="aqi-indicator">
+                -- AQI --
+            </div>
+            <div id="aqi-details" class="mt-3">
+                <table class="data-table">
+                    <tr>
+                        <th>PM2.5</th>
+                        <td id="pm25-value">--</td>
+                    </tr>
+                    <tr>
+                        <th>更新时间</th>
+                        <td id="update-time">--</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <!-- 预警检测按钮 -->
+            <div class="alert-btn">
+                <button id="check-alerts-btn" class="btn-primary" disabled>检测预警</button>
+            </div>
+            <div id="alert-message" class="alert-message"></div>
+            
+            <!-- 数据下载按钮 -->
+            <div class="download-btn">
+                <a id="download-data-btn" class="btn-primary" disabled href="#">下载历史数据</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 右侧预测结果 -->
+    <div class="data-panel">
+        <h2 class="panel-title">24小时预测趋势</h2>
+        <!-- 预测图表 -->
+        <div id="prediction-chart" class="chart-container"></div>
+        
+        <!-- 预测详情表格 -->
+        <div class="mt-4">
+            <div class="table-responsive">
+                <table class="data-table" id="prediction-table">
+                    <thead>
+                        <tr>
+                            <th>预测时间</th>
+                            <th>预测AQI</th>
+                            <th>预测PM2.5</th>
+                            <th>空气质量等级</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="4" class="text-center">暂无数据</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 初始化ECharts
+    var chart = echarts.init(document.getElementById('prediction-chart'));
+    
+    // 图表配置
+    var option = {
+        backgroundColor: 'transparent',
+        title: {
+            textStyle: {
+                color: '#ecf0f1',
+                fontSize: 16
+            },
+            subtextStyle: {
+                color: '#bdc3c7',
+                fontSize: 12
+            }
+        },
+        tooltip: {
+            trigger: 'axis',
+            formatter: function(params) {
+                var time = params[0].name;
+                var aqi = params[0].value;
+                var pm25 = params[1].value;
+                return `预测时间：${time}<br/>
+                        预测AQI：${Math.round(aqi)}<br/>
+                        预测PM2.5：${Math.round(pm25)}`;
+            }
+        },
+        legend: {
+            data: ['AQI', 'PM2.5'],
+            textStyle: {
+                color: '#ecf0f1'
+            },
+            top: 30
+        },
+        grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '3%',
+            top: 80,
+            containLabel: true
+        },
+        xAxis: {
+            type: 'category',
+            data: [],
+            axisLabel: {
+                color: '#ecf0f1',
+                rotate: 45,
+                formatter: function(value) {
+                    // 将时间格式化为 "今天/明天 HH:mm" 的形式
+                    var today = new Date();
+                    var time = new Date(value);
+                    var isToday = time.getDate() === today.getDate();
+                    var hour = time.getHours().toString().padStart(2, '0');
+                    var minute = time.getMinutes().toString().padStart(2, '0');
+                    return `${isToday ? '今天' : '明天'}\n${hour}:${minute}`;
+                }
+            },
+            axisLine: {
+                lineStyle: {
+                    color: 'rgba(255, 255, 255, 0.2)'
+                }
+            }
+        },
+        yAxis: {
+            type: 'value',
+            name: '指数',
+            nameTextStyle: {
+                color: '#ecf0f1'
+            },
+            axisLabel: {
+                color: '#ecf0f1'
+            },
+            splitLine: {
+                lineStyle: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                }
+            },
+            axisLine: {
+                lineStyle: {
+                    color: 'rgba(255, 255, 255, 0.2)'
+                }
+            }
+        },
+        series: [{
+            name: 'AQI',
+            type: 'line',
+            data: [],
+            smooth: true,
+            lineStyle: {
+                color: '#00a8ff',
+                width: 3
+            },
+            symbol: 'circle',
+            symbolSize: 8,
+            itemStyle: {
+                color: '#00a8ff'
+            }
+        },
+        {
+            name: 'PM2.5',
+            type: 'line',
+            data: [],
+            smooth: true,
+            lineStyle: {
+                color: '#4cd137',
+                width: 3
+            },
+            symbol: 'circle',
+            symbolSize: 8,
+            itemStyle: {
+                color: '#4cd137'
+            }
+        }]
+    };
+    
+    // 设置图表配置
+    chart.setOption(option);
+    
+    // 窗口大小改变时重绘图表
+    window.addEventListener('resize', function() {
+        chart.resize();
+    });
+
+    // DOM 元素
+    const provinceSelect = document.getElementById('province-select');
+    const citySelect = document.getElementById('city-select');
+    const checkAlertsBtn = document.getElementById('check-alerts-btn');
+    const alertMessage = document.getElementById('alert-message');
+    const downloadDataBtn = document.getElementById('download-data-btn');
+    
+    // 预测数据存储
+    let currentPredictions = null;
+    let currentCity = "";
+
+    // 获取城市列表
+    function getCities(province) {
+        const citySelect = document.getElementById('city-select');
+        
+        citySelect.innerHTML = '<option value="">选择城市</option>';
+        citySelect.disabled = true;
+        checkAlertsBtn.disabled = true;
+        downloadDataBtn.disabled = true;
+
+        if (!province) {
+            return;
+        }
+
+        fetch(`/api/get_cities?province=${encodeURIComponent(province)}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('网络请求失败');
+                }
+                return response.json();
+            })
+            .then(cities => {
+                if (Array.isArray(cities)) {
+                    cities.forEach(city => {
+                        const option = document.createElement('option');
+                        option.value = city;
+                        option.textContent = city;
+                        citySelect.appendChild(option);
+                    });
+                    citySelect.disabled = false;
+                } else {
+                    console.error('返回的城市数据格式不正确:', cities);
+                }
+            })
+            .catch(error => {
+                console.error('获取城市列表失败:', error);
+                alert('获取城市列表失败，请稍后重试');
+            });
+    }
+
+    // 获取预测数据
+    function getPrediction(city) {
+        if (!city) {
+            return;
+        }
+        
+        currentCity = city;
+
+        fetch(`/api/get_prediction?city=${encodeURIComponent(city)}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('网络请求失败');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!data.predictions || !Array.isArray(data.predictions)) {
+                    throw new Error('返回的数据格式不正确');
+                }
+
+                // 更新当前AQI显示
+                const current = data.current;
+                document.getElementById('aqi-value').textContent = current.aqi;
+                document.getElementById('aqi-value').className = 'aqi-indicator ' + getAQIClass(current.aqi);
+                document.getElementById('pm25-value').textContent = current.pm25;
+                document.getElementById('update-time').textContent = current.timestamp;
+
+                // 更新预测表格
+                const tbody = document.querySelector('#prediction-table tbody');
+                tbody.innerHTML = '';
+                data.predictions.forEach(pred => {
+                    const row = document.createElement('tr');
+                    const qualityClass = getQualityClass(pred.aqi);
+                    const timeStr = formatPredictionTime(pred.timestamp);
+                    row.innerHTML = `
+                        <td>${timeStr}</td>
+                        <td><strong>${pred.aqi}</strong></td>
+                        <td><strong>${pred.pm25}</strong></td>
+                        <td><span class="quality-level ${qualityClass}">${pred.quality_level}</span></td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                // 提取图表数据
+                const times = data.predictions.map(p => p.timestamp);  // 使用完整时间戳
+                const aqiValues = data.predictions.map(p => p.aqi);
+                const pm25Values = data.predictions.map(p => p.pm25);
+                
+                // 更新图表
+                chart.setOption({
+                    xAxis: {
+                        data: times
+                    },
+                    series: [{
+                        data: aqiValues
+                    }, {
+                        data: pm25Values
+                    }]
+                });
+                
+                // 存储预测数据
+                currentPredictions = data.predictions;
+                
+                // 启用预警检测按钮
+                checkAlertsBtn.disabled = false;
+                
+                // 更新数据下载链接
+                downloadDataBtn.href = `/data/download/history?city=${encodeURIComponent(city)}`;
+                downloadDataBtn.disabled = false;
+            })
+            .catch(error => {
+                console.error('获取预测数据失败:', error);
+                alert('获取预测数据失败，请稍后重试');
+            });
+    }
+
+    // 根据AQI值获取对应的CSS类
+    function getAQIClass(aqi) {
+        if (aqi <= 50) return 'aqi-excellent';
+        if (aqi <= 100) return 'aqi-good';
+        if (aqi <= 150) return 'aqi-moderate';
+        if (aqi <= 200) return 'aqi-unhealthy';
+        if (aqi <= 300) return 'aqi-very-unhealthy';
+        return 'aqi-hazardous';
+    }
+
+    function getQualityClass(aqi) {
+        if (aqi <= 50) return 'quality-excellent';
+        if (aqi <= 100) return 'quality-good';
+        if (aqi <= 150) return 'quality-moderate';
+        if (aqi <= 200) return 'quality-unhealthy';
+        if (aqi <= 300) return 'quality-very-unhealthy';
+        return 'quality-hazardous';
+    }
+
+    // 格式化预测时间显示
+    function formatPredictionTime(timestamp) {
+        const predTime = new Date(timestamp);
+        const now = new Date();
+        const isToday = predTime.getDate() === now.getDate();
+        const hour = predTime.getHours().toString().padStart(2, '0');
+        const minute = predTime.getMinutes().toString().padStart(2, '0');
+        return `${isToday ? '今天' : '明天'} ${hour}:${minute}`;
+    }
+    
+    // 检查预警
+    function checkAlerts() {
+        if (!currentCity || !currentPredictions) {
+            return;
+        }
+        
+        // 准备请求数据
+        const data = {
+            city: currentCity,
+            predictions: currentPredictions
+        };
+        
+        // 发送请求
+        fetch('/data/alerts/check', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                if (result.alerts && result.alerts.length > 0) {
+                    // 有预警生成
+                    alertMessage.innerHTML = `检测到${result.alerts.length}个新的空气质量预警！<a href="/alert-history">查看详情</a>`;
+                    alertMessage.className = 'alert-message alert-warning';
+                } else {
+                    // 没有预警生成
+                    alertMessage.textContent = '当前预测没有触发空气质量预警。';
+                    alertMessage.className = 'alert-message alert-success';
+                }
+            } else {
+                // 请求失败
+                alertMessage.textContent = result.message || '预警检测失败，请稍后重试';
+                alertMessage.className = 'alert-message alert-danger';
+            }
+            
+            alertMessage.style.display = 'block';
+            
+            // 5秒后自动隐藏提示
+            setTimeout(() => {
+                alertMessage.style.display = 'none';
+            }, 5000);
+        })
+        .catch(error => {
+            console.error('预警检测失败:', error);
+            alertMessage.textContent = '预警检测失败，请稍后重试';
+            alertMessage.className = 'alert-message alert-danger';
+            alertMessage.style.display = 'block';
+        });
+    }
+
+    // 事件监听器
+    provinceSelect.addEventListener('change', function() {
+        const province = this.value;
+        const citySelect = document.getElementById('city-select');
+        
+        // 重置城市选择
+        citySelect.innerHTML = '<option value="">选择城市</option>';
+        citySelect.disabled = true;
+        
+        if (province) {
+            getCities(province);
+        }
+        
+        // 重置AQI显示
+        document.getElementById('aqi-value').textContent = '-- AQI --';
+        document.getElementById('aqi-value').className = 'aqi-indicator';
+        document.getElementById('pm25-value').textContent = '--';
+        document.getElementById('update-time').textContent = '--';
+        
+        // 重置图表和表格
+        chart.setOption({
+            xAxis: { data: [] },
+            series: [{ data: [] }, { data: [] }]
+        });
+        document.querySelector('#prediction-table tbody').innerHTML = '<tr><td colspan="4" class="text-center">暂无数据</td></tr>';
+        
+        // 禁用按钮
+        checkAlertsBtn.disabled = true;
+        downloadDataBtn.disabled = true;
+        
+        // 清空消息
+        alertMessage.style.display = 'none';
+    });
+
+    citySelect.addEventListener('change', function() {
+        const city = this.value;
+        if (city) {
+            getPrediction(city);
+        } else {
+            // 清空预测数据
+            currentPredictions = null;
+            currentCity = "";
+        }
+    });
+    
+    // 预警检测按钮
+    checkAlertsBtn.addEventListener('click', checkAlerts);
+
+    // 初始化加载城市列表
+    if (provinceSelect.value) {
+        getCities(provinceSelect.value);
+    }
+
+    // 添加收藏
+    function addFavorite(city) {
+        fetch(`/user/add_favorite/${city}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // 更新收藏按钮状态
+                document.getElementById('favoriteBtn').innerHTML = '<i class="bi bi-star-fill"></i> 已收藏';
+                document.getElementById('favoriteBtn').onclick = () => removeFavorite(city);
+                showToast('success', data.message);
+            } else {
+                showToast('error', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('error', '操作失败，请重试');
+        });
+    }
+
+    // 取消收藏
+    function removeFavorite(city) {
+        fetch(`/user/remove_favorite/${city}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // 更新收藏按钮状态
+                document.getElementById('favoriteBtn').innerHTML = '<i class="bi bi-star"></i> 收藏';
+                document.getElementById('favoriteBtn').onclick = () => addFavorite(city);
+                showToast('success', data.message);
+            } else {
+                showToast('error', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('error', '操作失败，请重试');
+        });
+    }
+});
+</script>
+{% endblock %}

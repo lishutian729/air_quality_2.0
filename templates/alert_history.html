@@ -1,0 +1,637 @@
+{% extends "base.html" %}
+
+{% block title %}空气质量预警历史 - 空气质量监测系统{% endblock %}
+
+{% block css %}
+<style>
+.dashboard-main {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 20px;
+    padding: 20px;
+    min-height: calc(100vh - 60px);
+    background: #1e272e;
+    color: #ecf0f1;
+    overflow-y: auto;
+}
+
+.data-panel {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    height: fit-content;
+}
+
+.panel-title {
+    color: #ecf0f1;
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+}
+
+.form-select {
+    width: 100%;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    color: #ecf0f1;
+    margin-bottom: 10px;
+}
+
+.form-select option {
+    background: #2d3436;
+    color: #ecf0f1;
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    color: #ecf0f1;
+    margin-bottom: 10px;
+}
+
+.btn-primary {
+    background: #00a8ff;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.btn-primary:hover {
+    background: #0097e6;
+}
+
+.btn-primary:disabled {
+    background: rgba(255, 255, 255, 0.1);
+    cursor: not-allowed;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 5px;
+    color: #bdc3c7;
+}
+
+.table-responsive {
+    max-height: 600px;
+    overflow-y: auto;
+    background: inherit;
+    border-radius: 4px;
+}
+
+.table-responsive table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table-responsive thead {
+    position: sticky;
+    top: 0;
+    background: rgba(0, 0, 0, 0.2);
+    z-index: 1;
+}
+
+.table-responsive th {
+    padding: 12px 8px;
+    text-align: left;
+    font-weight: 500;
+    color: #ecf0f1;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    white-space: nowrap;
+}
+
+.table-responsive td {
+    padding: 10px 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.table-responsive tbody tr:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.alert {
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+.alert-success {
+    background: rgba(76, 209, 55, 0.2);
+    border: 1px solid rgba(76, 209, 55, 0.5);
+    color: #4cd137;
+}
+
+.alert-danger {
+    background: rgba(235, 77, 75, 0.2);
+    border: 1px solid rgba(235, 77, 75, 0.5);
+    color: #eb4d4b;
+}
+
+.alert-info {
+    background: rgba(0, 168, 255, 0.2);
+    border: 1px solid rgba(0, 168, 255, 0.5);
+    color: #00a8ff;
+}
+
+.badge {
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.badge-blue {
+    background: rgba(41, 128, 185, 0.3);
+    color: #3498db;
+}
+
+.badge-yellow {
+    background: rgba(241, 196, 15, 0.3);
+    color: #f1c40f;
+}
+
+.badge-orange {
+    background: rgba(230, 126, 34, 0.3);
+    color: #e67e22;
+}
+
+.badge-red {
+    background: rgba(231, 76, 60, 0.3);
+    color: #e74c3c;
+}
+
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.status-unread {
+    background-color: #e74c3c;
+}
+
+.status-read {
+    background-color: #7f8c8d;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 0;
+    color: #bdc3c7;
+}
+
+.empty-state i {
+    font-size: 48px;
+    margin-bottom: 20px;
+    display: block;
+}
+
+.tabs {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tab {
+    padding: 10px 20px;
+    cursor: pointer;
+    color: #bdc3c7;
+    position: relative;
+}
+
+.tab.active {
+    color: #00a8ff;
+}
+
+.tab.active:after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #00a8ff;
+}
+
+.tab-count {
+    background: rgba(231, 76, 60, 0.3);
+    color: #e74c3c;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: 5px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-main">
+    <!-- 左侧过滤面板 -->
+    <div class="data-panel">
+        <h2 class="panel-title">预警过滤</h2>
+        
+        <div class="form-group">
+            <label class="form-label" for="province-select">省份</label>
+            <select id="province-select" class="form-select">
+                <option value="">全部省份</option>
+                {% for province in provinces %}
+                <option value="{{ province }}">{{ province }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label" for="city-select">城市</label>
+            <select id="city-select" class="form-select">
+                <option value="">全部城市</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label" for="level-select">预警级别</label>
+            <select id="level-select" class="form-select">
+                <option value="">全部级别</option>
+                <option value="蓝色">蓝色预警</option>
+                <option value="黄色">黄色预警</option>
+                <option value="橙色">橙色预警</option>
+                <option value="红色">红色预警</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label" for="date-range">日期范围</label>
+            <input type="date" id="start-date" class="form-control" placeholder="开始日期">
+            <input type="date" id="end-date" class="form-control" placeholder="结束日期">
+        </div>
+        
+        <div class="form-group">
+            <button id="filter-btn" class="btn-primary">应用过滤</button>
+        </div>
+        
+        <div class="form-group mt-4">
+            <button id="mark-all-read-btn" class="btn-primary">标记所有为已读</button>
+        </div>
+    </div>
+
+    <!-- 右侧预警列表 -->
+    <div class="data-panel">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="panel-title mb-0">预警历史</h2>
+            <div class="tabs">
+                <div class="tab active" data-status="all">全部</div>
+                <div class="tab" data-status="unread">
+                    未读
+                    <span class="tab-count" id="unread-count">0</span>
+                </div>
+                <div class="tab" data-status="read">已读</div>
+            </div>
+        </div>
+        
+        <div id="alert-container">
+            <!-- 预警历史将通过JavaScript加载 -->
+            <div id="loading-alerts" class="text-center p-4">
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                加载中...
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // DOM元素
+    const alertContainer = document.getElementById('alert-container');
+    const loadingAlerts = document.getElementById('loading-alerts');
+    const provinceSelect = document.getElementById('province-select');
+    const citySelect = document.getElementById('city-select');
+    const levelSelect = document.getElementById('level-select');
+    const startDateInput = document.getElementById('start-date');
+    const endDateInput = document.getElementById('end-date');
+    const filterBtn = document.getElementById('filter-btn');
+    const markAllReadBtn = document.getElementById('mark-all-read-btn');
+    const tabs = document.querySelectorAll('.tab');
+    const unreadCountElement = document.getElementById('unread-count');
+    
+    // 状态变量
+    let currentStatus = 'all';
+    let alertFilters = {
+        city: '',
+        level: '',
+        start_date: '',
+        end_date: '',
+        status: 'all'
+    };
+    
+    // 初始化日期
+    const today = new Date();
+    const lastMonth = new Date();
+    lastMonth.setMonth(today.getMonth() - 1);
+    
+    startDateInput.valueAsDate = lastMonth;
+    endDateInput.valueAsDate = today;
+    
+    // 加载预警历史
+    function loadAlertHistory() {
+        alertContainer.innerHTML = '<div class="text-center p-4"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 加载中...</div>';
+        
+        // 构建查询参数
+        const params = new URLSearchParams();
+        
+        if (alertFilters.city) {
+            params.append('city', alertFilters.city);
+        }
+        
+        if (alertFilters.status && alertFilters.status !== 'all') {
+            params.append('status', alertFilters.status);
+        }
+        
+        // 发送API请求 - 使用新的直接路径
+        fetch(`/app/alerts/history?${params.toString()}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('网络请求失败');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    renderAlertHistory(data.alerts);
+                    loadUnreadCount();
+                } else {
+                    showErrorMessage(data.message || '获取预警历史失败');
+                }
+            })
+            .catch(error => {
+                console.error('获取预警历史失败:', error);
+                showErrorMessage('获取预警历史失败，请稍后重试');
+            });
+    }
+    
+    // 获取未读预警数量
+    function loadUnreadCount() {
+        fetch('/app/alerts/history/unread-count')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    unreadCountElement.textContent = data.count;
+                }
+            })
+            .catch(error => {
+                console.error('获取未读数量失败:', error);
+            });
+    }
+    
+    // 渲染预警历史列表
+    function renderAlertHistory(alerts) {
+        // 按照过滤条件过滤
+        if (alertFilters.level) {
+            alerts = alerts.filter(alert => alert.alert_level === alertFilters.level);
+        }
+        
+        if (alertFilters.start_date) {
+            const startDate = new Date(alertFilters.start_date);
+            alerts = alerts.filter(alert => new Date(alert.prediction_time) >= startDate);
+        }
+        
+        if (alertFilters.end_date) {
+            const endDate = new Date(alertFilters.end_date);
+            endDate.setHours(23, 59, 59);
+            alerts = alerts.filter(alert => new Date(alert.prediction_time) <= endDate);
+        }
+        
+        if (!alerts || alerts.length === 0) {
+            alertContainer.innerHTML = `
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <p>没有找到符合条件的预警记录</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let html = '<div class="table-responsive">';
+        html += '<table>';
+        html += `
+            <thead>
+                <tr>
+                    <th>状态</th>
+                    <th>城市</th>
+                    <th>预警级别</th>
+                    <th>AQI</th>
+                    <th>PM2.5</th>
+                    <th>预测时间</th>
+                    <th>创建时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+        `;
+        
+        alerts.forEach(alert => {
+            const statusClass = alert.read_status ? 'status-read' : 'status-unread';
+            const statusTitle = alert.read_status ? '已读' : '未读';
+            
+            let levelBadgeClass = '';
+            switch (alert.alert_level) {
+                case '蓝色': levelBadgeClass = 'badge-blue'; break;
+                case '黄色': levelBadgeClass = 'badge-yellow'; break;
+                case '橙色': levelBadgeClass = 'badge-orange'; break;
+                case '红色': levelBadgeClass = 'badge-red'; break;
+            }
+            
+            html += `
+                <tr>
+                    <td><span class="status-indicator ${statusClass}" title="${statusTitle}"></span></td>
+                    <td>${alert.city}</td>
+                    <td><span class="badge ${levelBadgeClass}">${alert.alert_level}预警</span></td>
+                    <td>${alert.aqi}</td>
+                    <td>${alert.pm25}</td>
+                    <td>${formatDateTime(alert.prediction_time)}</td>
+                    <td>${formatDateTime(alert.created_at)}</td>
+                    <td>
+                        ${!alert.read_status ? 
+                            `<button class="btn-primary btn-sm mark-read" data-id="${alert.id}">
+                                标记已读
+                            </button>` : 
+                            '<span class="text-muted">已读</span>'
+                        }
+                    </td>
+                </tr>
+            `;
+        });
+        
+        html += '</tbody>';
+        html += '</table>';
+        html += '</div>';
+        
+        alertContainer.innerHTML = html;
+        
+        // 绑定标记已读按钮事件
+        document.querySelectorAll('.mark-read').forEach(button => {
+            button.addEventListener('click', function() {
+                const alertId = this.getAttribute('data-id');
+                markAsRead(alertId);
+            });
+        });
+    }
+    
+    // 标记预警为已读
+    function markAsRead(alertId) {
+        fetch(`/app/alerts/history/${alertId}/read`, {
+            method: 'PUT'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('网络请求失败');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                loadAlertHistory();
+            } else {
+                showErrorMessage(data.message || '标记预警状态失败');
+            }
+        })
+        .catch(error => {
+            console.error('标记预警状态失败:', error);
+            showErrorMessage('标记预警状态失败，请稍后重试');
+        });
+    }
+    
+    // 标记所有为已读
+    function markAllAsRead() {
+        fetch('/app/alerts/history/mark-all-read', {
+            method: 'PUT'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('网络请求失败');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                alert('已将所有未读预警标记为已读');
+                loadAlertHistory();
+            } else {
+                showErrorMessage(data.message || '标记所有预警为已读失败');
+            }
+        })
+        .catch(error => {
+            console.error('标记所有预警为已读失败:', error);
+            showErrorMessage('标记所有预警为已读失败，请稍后重试');
+        });
+    }
+    
+    // 获取城市列表
+    function getCities(province) {
+        citySelect.innerHTML = '<option value="">全部城市</option>';
+
+        if (!province) {
+            return;
+        }
+
+        fetch(`/api/get_cities?province=${encodeURIComponent(province)}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('网络请求失败');
+                }
+                return response.json();
+            })
+            .then(cities => {
+                if (Array.isArray(cities)) {
+                    cities.forEach(city => {
+                        const option = document.createElement('option');
+                        option.value = city;
+                        option.textContent = city;
+                        citySelect.appendChild(option);
+                    });
+                } else {
+                    console.error('返回的城市数据格式不正确:', cities);
+                }
+            })
+            .catch(error => {
+                console.error('获取城市列表失败:', error);
+            });
+    }
+    
+    // 时间格式化函数
+    function formatDateTime(dateStr) {
+        const date = new Date(dateStr);
+        return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+    }
+    
+    // 显示错误消息
+    function showErrorMessage(message) {
+        alert(message);
+    }
+    
+    // 事件监听
+    provinceSelect.addEventListener('change', function() {
+        getCities(this.value);
+    });
+    
+    filterBtn.addEventListener('click', function() {
+        alertFilters.city = citySelect.value;
+        alertFilters.level = levelSelect.value;
+        alertFilters.start_date = startDateInput.value;
+        alertFilters.end_date = endDateInput.value;
+        
+        loadAlertHistory();
+    });
+    
+    markAllReadBtn.addEventListener('click', markAllAsRead);
+    
+    // 切换标签页
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            tabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            currentStatus = this.getAttribute('data-status');
+            alertFilters.status = currentStatus;
+            
+            loadAlertHistory();
+        });
+    });
+    
+    // 初始加载
+    loadAlertHistory();
+    
+    // 设置自动刷新，每60秒更新一次预警列表
+    const autoRefreshInterval = setInterval(() => {
+        loadAlertHistory();
+        console.log("自动刷新预警列表...");
+    }, 60000);
+    
+    // 页面卸载时清除定时器
+    window.addEventListener('beforeunload', () => {
+        clearInterval(autoRefreshInterval);
+    });
+    
+    // 如果省份已选择，加载城市列表
+    if (provinceSelect.value) {
+        getCities(provinceSelect.value);
+    }
+});
+</script>
+{% endblock %} 

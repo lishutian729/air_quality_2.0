@@ -1,0 +1,297 @@
+/* 全局样式 */
+:root {
+    --primary-color: #00a8ff;
+    --secondary-color: #0097e6;
+    --background-color: #1e272e;
+    --panel-bg: rgba(13, 20, 24, 0.7);
+    --border-color: #00a8ff;
+    --text-color: #ecf0f1;
+    --heading-color: #00a8ff;
+}
+
+/* 基础样式 */
+body.dashboard-body {
+    margin: 0;
+    padding: 0;
+    background: var(--background-color);
+    color: var(--text-color);
+    font-family: 'Microsoft YaHei', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.dashboard-container {
+    width: 100%;
+    min-height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* 头部样式 */
+.dashboard-header {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 168, 255, 0.1);
+}
+
+.dashboard-title {
+    color: var(--heading-color);
+    font-size: 2.5em;
+    text-align: center;
+    margin-bottom: 20px;
+    text-shadow: 0 0 10px rgba(0, 168, 255, 0.5);
+}
+
+.dashboard-nav {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.nav-link {
+    color: var(--text-color);
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+.nav-link:hover, .nav-link.active {
+    background: var(--primary-color);
+    color: #fff;
+}
+
+/* 主要内容区域 */
+.dashboard-main {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+/* 数据面板 */
+.data-panel {
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 20px rgba(0, 168, 255, 0.1);
+}
+
+.panel-title {
+    color: var(--heading-color);
+    font-size: 1.5em;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+/* 地图容器 */
+#map-container {
+    height: 600px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+/* 图表容器 */
+.chart-container {
+    height: 400px;
+    margin: 20px 0;
+}
+
+/* 数据表格 */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+.data-table th,
+.data-table td {
+    padding: 12px;
+    text-align: center;
+    border: 1px solid rgba(0, 168, 255, 0.2);
+}
+
+.data-table th {
+    background: rgba(0, 168, 255, 0.1);
+    color: var(--heading-color);
+}
+
+.data-table tr:hover {
+    background: rgba(0, 168, 255, 0.05);
+}
+
+/* 选择器样式 */
+.select-container {
+    margin-bottom: 20px;
+}
+
+select {
+    background: var(--panel-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    border-radius: 5px;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+/* AQI指标样式 */
+.aqi-indicator {
+    text-align: center;
+    padding: 20px;
+    border-radius: 10px;
+    margin: 10px 0;
+    font-size: 2em;
+    font-weight: bold;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+/* AQI颜色等级 */
+.aqi-excellent { background: rgba(0, 228, 0, 0.2); color: #00e400; }
+.aqi-good { background: rgba(255, 255, 0, 0.2); color: #ffff00; }
+.aqi-moderate { background: rgba(255, 126, 0, 0.2); color: #ff7e00; }
+.aqi-unhealthy { background: rgba(255, 0, 0, 0.2); color: #ff0000; }
+.aqi-very-unhealthy { background: rgba(153, 0, 76, 0.2); color: #99004c; }
+.aqi-hazardous { background: rgba(126, 0, 35, 0.2); color: #7e0023; }
+
+/* 动画效果 */
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .dashboard-title {
+        font-size: 1.8em;
+    }
+    
+    .dashboard-main {
+        grid-template-columns: 1fr;
+    }
+    
+    #map-container {
+        height: 400px;
+    }
+}
+
+/* 加载动画 */
+.loading {
+    position: relative;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loading::after {
+    content: '';
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--border-color);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* 导航栏样式 */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* 卡片样式 */
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+}
+
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    padding: 15px 20px;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+.aqi-dashboard {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+.aqi-dashboard:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.aqi-value {
+    font-size: 48px;
+    font-weight: bold;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.aqi-label {
+    font-size: 18px;
+    color: #666;
+    text-align: center;
+    margin-top: 10px;
+}
+
+.time-selector {
+    margin-bottom: 20px;
+}
+
+.prediction-card {
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.prediction-card:hover {
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+}
+
+.quality-level {
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 10px;
+    transition: all 0.3s ease;
+}
+
+/* 工具提示样式 */
+.tooltip {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 1000;
+} 

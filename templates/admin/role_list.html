@@ -1,0 +1,279 @@
+{% extends "admin/base.html" %}
+
+{% block title %}角色管理 - 管理后台{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h3">角色管理</h2>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createRoleModal">
+            <i class="bi bi-plus-lg"></i> 新增角色
+        </button>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>角色名称</th>
+                            <th>描述</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for role in roles %}
+                        <tr>
+                            <td>{{ role.id }}</td>
+                            <td>{{ role.name }}</td>
+                            <td>{{ role.description }}</td>
+                            <td>{{ role.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="editRole({{ role.id }})">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteRole({{ role.id }}, '{{ role.name }}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 分页 -->
+    {% if roles.pages > 1 %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% for page in roles.iter_pages() %}
+                {% if page %}
+                    {% set args = request.args.copy() %}
+                    {% set _ = args.pop('page', None) %}
+                    <li class="page-item {% if page == roles.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.role_list', page=page, **args) }}">{{ page }}</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    <!-- 创建角色模态框 -->
+    <div class="modal fade" id="createRoleModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">新增角色</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createRoleForm">
+                        <div class="mb-3">
+                            <label class="form-label">角色名称</label>
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">描述</label>
+                            <textarea class="form-control" name="description" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">权限</label>
+                            <div class="row g-3">
+                                {% for permission in permissions %}
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="permissions" value="{{ permission.id }}" id="perm_{{ permission.id }}">
+                                        <label class="form-check-label" for="perm_{{ permission.id }}">
+                                            {{ permission.name }}
+                                            <small class="d-block text-muted">{{ permission.description }}</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="createRole()">确定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑角色模态框 -->
+    <div class="modal fade" id="editRoleModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">编辑角色</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editRoleForm">
+                        <input type="hidden" name="id">
+                        <div class="mb-3">
+                            <label class="form-label">角色名称</label>
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">描述</label>
+                            <textarea class="form-control" name="description" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">权限</label>
+                            <div class="row g-3">
+                                {% for permission in permissions %}
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="permissions" value="{{ permission.id }}" id="edit_perm_{{ permission.id }}">
+                                        <label class="form-check-label" for="edit_perm_{{ permission.id }}">
+                                            {{ permission.name }}
+                                            <small class="d-block text-muted">{{ permission.description }}</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="updateRole()">确定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+function createRole() {
+    const form = document.getElementById('createRoleForm');
+    const formData = new FormData(form);
+    const data = {
+        name: formData.get('name'),
+        description: formData.get('description'),
+        permissions: Array.from(form.querySelectorAll('input[name="permissions"]:checked')).map(input => parseInt(input.value))
+    };
+
+    fetch('{{ url_for("admin.create_role") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.error) {
+            alert(result.error);
+        } else {
+            alert('创建成功');
+            location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('创建失败');
+    });
+}
+
+function editRole(roleId) {
+    fetch(`{{ url_for("admin.get_role", role_id=0) }}`.replace('0', roleId))
+        .then(response => response.json())
+        .then(role => {
+            const form = document.getElementById('editRoleForm');
+            form.id.value = role.id;
+            form.name.value = role.name;
+            form.description.value = role.description;
+            
+            // 清除所有权限选中状态
+            form.querySelectorAll('input[name="permissions"]').forEach(input => {
+                input.checked = false;
+            });
+            
+            // 设置已有权限
+            role.permissions.forEach(permId => {
+                const input = form.querySelector(`input[value="${permId}"]`);
+                if (input) input.checked = true;
+            });
+            
+            const modal = new bootstrap.Modal(document.getElementById('editRoleModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('获取角色信息失败');
+        });
+}
+
+function updateRole() {
+    const form = document.getElementById('editRoleForm');
+    const formData = new FormData(form);
+    const roleId = formData.get('id');
+    const data = {
+        name: formData.get('name'),
+        description: formData.get('description'),
+        permissions: Array.from(form.querySelectorAll('input[name="permissions"]:checked')).map(input => parseInt(input.value))
+    };
+
+    fetch(`{{ url_for("admin.update_role", role_id=0) }}`.replace('0', roleId), {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.error) {
+            alert(result.error);
+        } else {
+            alert('更新成功');
+            location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('更新失败');
+    });
+}
+
+function deleteRole(roleId, roleName) {
+    if (!confirm(`确定要删除角色 ${roleName} 吗？`)) {
+        return;
+    }
+
+    fetch(`{{ url_for("admin.delete_role", role_id=0) }}`.replace('0', roleId), {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.error) {
+            alert(result.error);
+        } else {
+            alert('删除成功');
+            location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('删除失败');
+    });
+}
+</script>
+{% endblock %} 

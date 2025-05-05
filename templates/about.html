@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}空气质量预测 - 关于{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">关于本项目</h2>
+                    
+                    <h4 class="mb-3">项目简介</h4>
+                    <p class="lead">
+                        本项目是一个基于机器学习的空气质量预测系统，旨在为用户提供准确的空气质量预测信息，
+                        帮助人们更好地了解和应对空气污染问题。
+                    </p>
+
+                    <hr class="my-4">
+
+                    <h4 class="mb-3">主要功能</h4>
+                    <ul class="list-group list-group-flush mb-4">
+                        <li class="list-group-item">
+                            <i class="fas fa-chart-line me-2"></i>
+                            实时空气质量监测与预测
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-history me-2"></i>
+                            历史数据查询与分析
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            数据可视化展示
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-brain me-2"></i>
+                            多模型集成预测
+                        </li>
+                    </ul>
+
+                    <h4 class="mb-3">技术栈</h4>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5 class="mb-3">后端技术</h5>
+                            <ul class="list-unstyled">
+                                <li><i class="fab fa-python me-2"></i>Python</li>
+                                <li><i class="fas fa-flask me-2"></i>Flask</li>
+                                <li><i class="fas fa-brain me-2"></i>Scikit-learn</li>
+                                <li><i class="fas fa-chart-bar me-2"></i>LightGBM</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="mb-3">前端技术</h5>
+                            <ul class="list-unstyled">
+                                <li><i class="fab fa-bootstrap me-2"></i>Bootstrap 5</li>
+                                <li><i class="fab fa-js me-2"></i>JavaScript</li>
+                                <li><i class="fas fa-chart-line me-2"></i>Chart.js</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <h4 class="mb-3">数据来源</h4>
+                    <p>
+                        本系统使用的数据来自多个来源：
+                    </p>
+                    <ul>
+                        <li>环境空气质量自动监测数据</li>
+                        <li>气象数据</li>
+                        <li>历史统计数据</li>
+                    </ul>
+
+                    <hr class="my-4">
+
+                    <h4 class="mb-3">预测模型</h4>
+                    <p>
+                        系统采用多模型集成的方式进行预测，主要包括：
+                    </p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">随机森林</h5>
+                                    <p class="card-text">适用于处理非线性关系，具有良好的泛化能力。</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">LightGBM</h5>
+                                    <p class="card-text">高效的梯度提升框架，具有出色的预测性能。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h4 class="mb-3">联系我们</h4>
+                    <p>
+                        如果您有任何问题、建议或反馈，请通过以下方式联系我们：
+                    </p>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-envelope me-2"></i>Email: contact@example.com</li>
+                        <li><i class="fab fa-github me-2"></i>GitHub: github.com/example/air-quality</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
